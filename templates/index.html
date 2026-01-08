@@ -181,6 +181,29 @@
             border-radius: 4px;
             font-weight: bold;
         }
+        
+        .editable-name {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            font-size: 1.1em;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+        
+        .editable-name:focus {
+            outline: none;
+            border-color: #5568d3;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .editable-hint {
+            font-size: 0.85em;
+            color: #6c757d;
+            margin-top: 5px;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -217,8 +240,9 @@
             </div>
             
             <div class="result-item">
-                <div class="result-label">👤 Detected Name</div>
-                <div class="result-value" id="name">-</div>
+                <div class="result-label">👤 Detected Name (Editable)</div>
+                <input type="text" class="editable-name" id="name" placeholder="Edit name if OCR is incorrect">
+                <div class="editable-hint">💡 Click to edit and correct any OCR errors</div>
             </div>
             
             <div class="result-item">
@@ -323,11 +347,15 @@
                     showError('Error: ' + data.error);
                 } else {
                     // Display results
-                    document.getElementById('timestamp').textContent = data.timestamp;
-                    document.getElementById('name').textContent = data.name;
+                    document.getElementById('timestavalue = data.name;  // Use .value for input field
                     document.getElementById('nric').textContent = data.nric_last_4;
                     document.getElementById('ocrText').textContent = data.ocr_text || 'No text detected';
                     
+                    results.classList.add('show');
+                    
+                    // Focus on name field for easy editing
+                    document.getElementById('name').focus();
+                    document.getElementById('name').select(
                     results.classList.add('show');
                 }
             } catch (err) {
