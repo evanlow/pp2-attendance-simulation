@@ -16,10 +16,23 @@ app = Flask(__name__)
 
 # Configure pytesseract path (auto-detect environment)
 # Windows: Use local installation path
-# Heroku/Linux: Tesseract installed via Aptfile in system PATH
 if os.path.exists(r'C:\Program Files\Tesseract-OCR\tesseract.exe'):
     pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-# On Heroku, pytesseract will automatically find tesseract in PATH
+else:
+    # Heroku/Linux: Set TESSDATA_PREFIX for Tesseract to find language data
+    # Tesseract installed via Aptfile needs this environment variable
+    tessdata_paths = [
+        '/usr/share/tesseract-ocr/5/tessdata',
+        '/usr/share/tesseract-ocr/4.00/tessdata',
+        '/usr/share/tessdata',
+        '/app/.apt/usr/share/tesseract-ocr/5/tessdata',
+        '/app/.apt/usr/share/tesseract-ocr/4.00/tessdata'
+    ]
+    
+    for path in tessdata_paths:
+        if os.path.exists(path):
+            os.environ['TESSDATA_PREFIX'] = path
+            break
 
 
 @app.route('/')
