@@ -347,7 +347,8 @@
                     showError('Error: ' + data.error);
                 } else {
                     // Display results
-                    document.getElementById('timestavalue = data.name;  // Use .value for input field
+                    document.getElementById('timestamp').textContent = data.timestamp;
+                    document.getElementById('name').value = data.name;  // Use .value for input field
                     document.getElementById('nric').textContent = data.nric_last_4;
                     document.getElementById('ocrText').textContent = data.ocr_text || 'No text detected';
                     
@@ -355,8 +356,7 @@
                     
                     // Focus on name field for easy editing
                     document.getElementById('name').focus();
-                    document.getElementById('name').select(
-                    results.classList.add('show');
+                    document.getElementById('name').select();
                 }
             } catch (err) {
                 showError('Network error: ' + err.message);
