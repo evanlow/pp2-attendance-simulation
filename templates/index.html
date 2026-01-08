@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mock NRIC Verification Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+        
+        .disclaimer {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+            color: #856404;
+            font-weight: bold;
+        }
+        
+        .camera-section {
+            margin: 30px 0;
+            text-align: center;
+        }
+        
+        #video {
+            width: 100%;
+            max-width: 640px;
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            display: block;
+            margin: 20px auto;
+        }
+        
+        #canvas {
+            display: none;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .results {
+            margin-top: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .results.show {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .result-item {
+            margin: 15px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .result-label {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .result-value {
+            color: #333;
+            font-size: 1.1em;
+            word-wrap: break-word;
+        }
+        
+        .ocr-text {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            font-weight: bold;
+            display: none;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: none;
+            border: 2px solid #f5c6cb;
+        }
+        
+        .error.show {
+            display: block;
+        }
+        
+        .highlight {
+            background: #d4edda;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎭 Mock NRIC Verification Demo</h1>
+        
+        <div class="disclaimer">
+            ⚠️ DEMO ONLY - No data stored or persisted ⚠️
+        </div>
+        
+        <div class="camera-section">
+            <video id="video" autoplay playsinline></video>
+            <canvas id="canvas"></canvas>
+            
+            <div class="button-group">
+                <button id="startCamera">📷 Start Camera</button>
+                <button id="captureBtn" disabled>📸 Capture Image</button>
+                <button id="verifyBtn" disabled>✅ Verify NRIC</button>
+            </div>
+        </div>
+        
+        <div class="loading" id="loading">
+            <p>🔄 Processing OCR... Please wait...</p>
+        </div>
+        
+        <div class="error" id="error"></div>
+        
+        <div class="results" id="results">
+            <h2 style="color: #667eea; margin-bottom: 20px;">📋 Verification Results</h2>
+            
+            <div class="result-item">
+                <div class="result-label">⏰ Timestamp (SGT)</div>
+                <div class="result-value" id="timestamp">-</div>
+            </div>
+            
+            <div class="result-item">
+                <div class="result-label">👤 Detected Name</div>
+                <div class="result-value" id="name">-</div>
+            </div>
+            
+            <div class="result-item">
+                <div class="result-label">🔢 NRIC Last 4 Digits</div>
+                <div class="result-value">****<span class="highlight" id="nric">-</span></div>
+            </div>
+            
+            <div class="result-item">
+                <div class="result-label">📄 OCR Raw Text</div>
+                <div class="result-value">
+                    <div class="ocr-text" id="ocrText">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // DOM elements
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const startCameraBtn = document.getElementById('startCamera');
+        const captureBtn = document.getElementById('captureBtn');
+        const verifyBtn = document.getElementById('verifyBtn');
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const results = document.getElementById('results');
+        
+        let stream = null;
+        let capturedBlob = null;
+        
+        // Start camera
+        startCameraBtn.addEventListener('click', async () => {
+            try {
+                // Request camera access
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' } 
+                });
+                video.srcObject = stream;
+                
+                // Enable capture button
+                captureBtn.disabled = false;
+                startCameraBtn.textContent = '📷 Camera Active';
+                startCameraBtn.disabled = true;
+                
+                hideError();
+            } catch (err) {
+                showError('Camera access denied or not available: ' + err.message);
+            }
+        });
+        
+        // Capture image from video
+        captureBtn.addEventListener('click', () => {
+            // Set canvas size to match video
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            // Draw current video frame to canvas
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0);
+            
+            // Convert canvas to blob
+            canvas.toBlob((blob) => {
+                capturedBlob = blob;
+                verifyBtn.disabled = false;
+                captureBtn.textContent = '✓ Image Captured';
+                
+                // Provide visual feedback
+                video.style.border = '3px solid #28a745';
+                setTimeout(() => {
+                    video.style.border = '3px solid #667eea';
+                }, 500);
+            }, 'image/png');
+        });
+        
+        // Verify NRIC (send to backend)
+        verifyBtn.addEventListener('click', async () => {
+            if (!capturedBlob) {
+                showError('No image captured');
+                return;
+            }
+            
+            // Show loading
+            loading.classList.add('show');
+            results.classList.remove('show');
+            hideError();
+            verifyBtn.disabled = true;
+            
+            try {
+                // Create form data
+                const formData = new FormData();
+                formData.append('image', capturedBlob, 'nric.png');
+                
+                // Send to Flask backend
+                const response = await fetch('/verify', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    showError('Error: ' + data.error);
+                } else {
+                    // Display results
+                    document.getElementById('timestamp').textContent = data.timestamp;
+                    document.getElementById('name').textContent = data.name;
+                    document.getElementById('nric').textContent = data.nric_last_4;
+                    document.getElementById('ocrText').textContent = data.ocr_text || 'No text detected';
+                    
+                    results.classList.add('show');
+                }
+            } catch (err) {
+                showError('Network error: ' + err.message);
+            } finally {
+                loading.classList.remove('show');
+                verifyBtn.disabled = false;
+            }
+        });
+        
+        // Helper functions
+        function showError(message) {
+            error.textContent = message;
+            error.classList.add('show');
+        }
+        
+        function hideError() {
+            error.classList.remove('show');
+        }
+        
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        });
+    </script>
+</body>
+</html>
